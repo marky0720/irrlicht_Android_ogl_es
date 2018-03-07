@@ -107,7 +107,7 @@ IrrlichtDevice *startup(android_app* app)
 	// create device
 	SIrrlichtCreationParameters param;
 	param.DeviceType = EIDT_ANDROID;
-	param.DriverType =EDT_SOFTWARE;//
+	//param.DriverType =EDT_SOFTWARE;//
     //param.DriverType = EDT_OGLES1;				// android:glEsVersion in AndroidManifest.xml should be "0x00010000"
 	//param.DriverType = EDT_OGLES2;				// android:glEsVersion in AndroidManifest.xml should be "0x00020000"
 	param.WindowSize = dimension2d<u32>(0,0);	// using 0,0 it will automatically set it to the maximal size

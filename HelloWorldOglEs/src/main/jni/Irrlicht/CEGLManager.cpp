@@ -3,6 +3,7 @@
 // For conditions of distribution and use, see copyright notice in Irrlicht.h
 
 #include "CEGLManager.h"
+#include "IrrCompileConfig.h"  //Add by marky
 
 #ifdef _IRR_COMPILE_WITH_EGL_MANAGER_
 

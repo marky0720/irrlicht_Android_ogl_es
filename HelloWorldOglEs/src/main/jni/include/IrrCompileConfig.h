@@ -116,12 +116,15 @@
 #define NO_IRR_COMPILE_WITH_BURNINGSVIDEO_
 #endif // __EMSCRIPTEN__
 
+//move to make file by marky
+
 #if defined(__ANDROID__)
 #define _IRR_ANDROID_PLATFORM_
 #define _IRR_COMPILE_WITH_ANDROID_DEVICE_
 #define _IRR_COMPILE_ANDROID_ASSET_READER_
 #define NO_IRR_COMPILE_WITH_OPENGL_
 #endif
+
 
 #if defined(__SVR4) && defined(__sun)
 #define _IRR_SOLARIS_PLATFORM_

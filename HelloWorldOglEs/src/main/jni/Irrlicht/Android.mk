@@ -10,11 +10,16 @@ LOCAL_MODULE    := IrrlichtAndroid
 #LOCAL_ARM_MODE := arm
 
 ### Add all source file names to be included in lib separated by a whitespace
-LOCAL_CFLAGS := -Wall -pipe -fno-exceptions -fno-rtti -fstrict-aliasing -D_IRR_ANDROID_PLATFORM_ -D_IRR_COMPILE_WITH_ANDROID_DEVICE_
+LOCAL_CFLAGS := -Wall -pipe -fno-exceptions -fno-rtti -fstrict-aliasing -D__ANDROID__
+ #-D_IRR_ANDROID_PLATFORM_ -D_IRR_COMPILE_WITH_ANDROID_DEVICE_ -D_IRR_COMPILE_ANDROID_ASSET_READER_ -DNO_IRR_COMPILE_WITH_OPENGL_
 ifndef NDEBUG
 LOCAL_CFLAGS += -g -D_DEBUG
 else
 LOCAL_CFLAGS += -fexpensive-optimizations -O3
+endif
+
+ifeq ($(TARGET_ARCH_ABI),x86)
+LOCAL_CFLAGS += -fno-stack-protector
 endif
 
 LOCAL_C_INCLUDES := \
@@ -375,7 +380,8 @@ LOCAL_MODULE    := twodgraphics
 
 ### Add all source file names to be included in lib separated by a whitespace
 
-LOCAL_CFLAGS := -pipe -fno-exceptions -fno-rtti -fstrict-aliasing -D_IRR_ANDROID_PLATFORM_ -D_IRR_COMPILE_WITH_ANDROID_DEVICE_
+LOCAL_CFLAGS := -pipe -fno-exceptions -fno-rtti -fstrict-aliasing -D__ANDROID__
+# -D_IRR_ANDROID_PLATFORM_ -D_IRR_COMPILE_WITH_ANDROID_DEVICE_ -D_IRR_COMPILE_ANDROID_ASSET_READER_ -DNO_IRR_COMPILE_WITH_OPENGL_
 
 ifndef NDEBUG
 LOCAL_CFLAGS += -g -D_DEBUG

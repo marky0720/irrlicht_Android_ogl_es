@@ -2,7 +2,9 @@
 	This example shows a simple application for Android.
 */
 
+#include "IrrCompileConfig.h"
 #include <irrlicht.h>
+
 
 #ifdef _IRR_ANDROID_PLATFORM_
 
@@ -251,9 +253,11 @@ void android_main(android_app* app)
 	*/
 	SIrrlichtCreationParameters param;
 	param.DeviceType = EIDT_ANDROID;
-//	param.DriverType = EDT_OGLES1;				// android:glEsVersion in AndroidManifest.xml should be "0x00010000" (requesting 0x00020000 will also guarantee that ES1 works)
-	param.DriverType = EDT_OGLES2;				// android:glEsVersion in AndroidManifest.xml should be "0x00020000"
-	param.WindowSize = dimension2d<u32>(640,480);	// using 0,0 it will automatically set it to the maximal size //marky : 0, 0 doesnot work
+	param.DriverType = EDT_OGLES1;				// android:glEsVersion in AndroidManifest.xml should be "0x00010000" (requesting 0x00020000 will also guarantee that ES1 works)
+//	param.DriverType = EDT_OGLES2;				// android:glEsVersion in AndroidManifest.xml should be "0x00020000"
+//    param.DriverType = EDT_SOFTWARE;
+	param.WindowSize = dimension2d<u32>(0,0);	// using 0,0 it will automatically set it to the maximal size //marky : 0, 0 doesnot work
+
 	param.PrivateData = app;
 	param.Bits = 24;
 	param.ZBufferBits = 16;
