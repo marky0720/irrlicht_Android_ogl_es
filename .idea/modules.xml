@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/CustomSceneNode/CustomSceneNode.iml" filepath="$PROJECT_DIR$/CustomSceneNode/CustomSceneNode.iml" />
       <module fileurl="file://$PROJECT_DIR$/HelloWorldOglEs/HelloWorldOglEs.iml" filepath="$PROJECT_DIR$/HelloWorldOglEs/HelloWorldOglEs.iml" />
       <module fileurl="file://$PROJECT_DIR$/irrlicht_Android_ogl_es.iml" filepath="$PROJECT_DIR$/irrlicht_Android_ogl_es.iml" />
     </modules>
