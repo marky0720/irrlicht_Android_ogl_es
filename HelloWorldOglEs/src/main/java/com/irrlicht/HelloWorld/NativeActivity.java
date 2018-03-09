@@ -1,4 +1,4 @@
-package com.irrlicht.twodgraphics;
+package com.irrlicht.HelloWorld;
 
 import android.app.Activity;
 import android.os.Bundle;

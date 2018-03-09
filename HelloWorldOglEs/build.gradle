@@ -8,7 +8,7 @@ android {
     buildToolsVersion '26.0.2'
 
     defaultConfig {
-        applicationId "com.irrlicht.twodgraphics"
+        applicationId "com.irrlicht.HelloWorld"
         minSdkVersion 18
         targetSdkVersion 23    
     }

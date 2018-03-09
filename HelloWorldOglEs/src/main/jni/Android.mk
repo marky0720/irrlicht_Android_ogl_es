@@ -8,7 +8,7 @@ LOCAL_MODULE_FILENAME := libgame
 
 LOCAL_SRC_FILES := \
 
-LOCAL_SHARED_LIBRARIES := IrrlichtAndroid android_native_app_glue twodgraphics 
+LOCAL_SHARED_LIBRARIES := IrrlichtAndroid android_native_app_glue HelloWorld
 
 include $(BUILD_SHARED_LIBRARY)
 

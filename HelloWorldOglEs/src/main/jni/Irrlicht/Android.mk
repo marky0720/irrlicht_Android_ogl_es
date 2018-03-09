@@ -374,8 +374,8 @@ JNI_FOLDER := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE    := twodgraphics
-#LOCAL_MODULE_FILENAME := libtwodgraphics
+LOCAL_MODULE    := HelloWorld
+#LOCAL_MODULE_FILENAME := libHelloWorld
 #LOCAL_ARM_MODE := arm
 
 ### Add all source file names to be included in lib separated by a whitespace
