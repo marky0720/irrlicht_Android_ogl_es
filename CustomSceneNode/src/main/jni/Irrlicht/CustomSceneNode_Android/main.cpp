@@ -616,7 +616,7 @@ void android_main(android_app* app)
 
     //IGUIStaticText *text = NULL;
     IGUIStaticText * text=guienv->addStaticText(L"Hello World! This is the Irrlicht Software renderer! from himax", rect<s32>(100,100,300,200), false, false, 0, GUI_INFO_FPS);
-    text->
+
     /* Add by marky for customScene */
     device->setWindowCaption(L"Custom Scene Node - Irrlicht Engine Demo");
     smgr->addCameraSceneNode(0, core::vector3df(0,-40,0), core::vector3df(0,0,0));
