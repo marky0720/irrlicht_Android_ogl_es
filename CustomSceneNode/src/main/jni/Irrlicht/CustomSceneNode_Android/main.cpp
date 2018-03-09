@@ -615,7 +615,7 @@ void android_main(android_app* app)
 #else
 
     //IGUIStaticText *text = NULL;
-    IGUIStaticText * text=guienv->addStaticText(L"Hello World! This is the Irrlicht Software renderer! from himax", rect<s32>(100,100,300,200), false, false, 0, GUI_INFO_FPS);
+    IGUIStaticText * text=guienv->addStaticText(L"himax Hello World! This is the Irrlicht Software renderer! ", rect<s32>(100,100,300,250), false, false, 0, GUI_INFO_FPS);
 
     /* Add by marky for customScene */
     device->setWindowCaption(L"Custom Scene Node - Irrlicht Engine Demo");
