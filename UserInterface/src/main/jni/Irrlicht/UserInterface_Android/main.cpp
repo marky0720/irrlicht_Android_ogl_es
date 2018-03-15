@@ -144,6 +144,7 @@ public:
 					}
 					return true;
 
+
 				case GUI_ID_FILE_OPEN_BUTTON:
           LOGW("marky  file =%s, func=%s, line=%d , GUI_ID_FILE_OPEN_BUTTON ", __FILE__, __FUNCTION__, __LINE__);
 					Context.listbox->addItem(L"File open");
