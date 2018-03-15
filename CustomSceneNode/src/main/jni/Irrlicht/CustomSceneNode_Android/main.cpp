@@ -198,8 +198,10 @@ public:
 
 	virtual bool OnEvent(const SEvent& event)
 	{
+		LOGW("marky OnEvent file =%s, func=%s, line=%d, EventType=%X  ", __FILE__, __FUNCTION__, __LINE__, event.EventType);
 		if (event.EventType == EET_TOUCH_INPUT_EVENT)
 		{
+
 			/*
 				For now we fake mouse-events. Touch-events will be handled inside Irrlicht in the future, but until
 				that is implemented you can use this workaround to get a GUI which works at least for simple elements like
@@ -215,6 +217,7 @@ public:
 			fakeMouseEvent.MouseInput.ButtonStates = 0;
 			fakeMouseEvent.MouseInput.Event = EMIE_COUNT;
 
+			LOGW("marky OnEvent file =%s, func=%s, line=%d, EET_TOUCH_INPUT_EVENT  (X,Y)=(%d,%d)", __FILE__, __FUNCTION__, __LINE__, event.TouchInput.X, event.TouchInput.Y);
 			switch (event.TouchInput.Event)
 			{
 				case ETIE_PRESSED_DOWN:
@@ -281,6 +284,7 @@ public:
 			/*
 				Show and hide the soft input keyboard when an edit-box get's the focus.
 			*/
+			LOGW("marky OnEvent file =%s, func=%s, line=%d, EET_GUI_EVENT  event.GUIEvent.EventType=%d", __FILE__, __FUNCTION__, __LINE__, event.GUIEvent.EventType);
 			switch(event.GUIEvent.EventType)
 			{
 				case EGET_EDITBOX_ENTER:
