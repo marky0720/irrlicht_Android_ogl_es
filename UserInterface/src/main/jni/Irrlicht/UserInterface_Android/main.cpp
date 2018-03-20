@@ -44,7 +44,8 @@ enum
 	GUI_ID_NEW_WINDOW_BUTTON,
 	GUI_ID_FILE_OPEN_BUTTON,
 	GUI_ID_TRANSPARENCY_SCROLL_BAR,
-  GUI_INFO_FPS
+    GUI_INFO_FPS,
+    GUI_IRR_LOGO
 };
 
 /*
@@ -71,115 +72,245 @@ We only react to gui events, and if it's such an event, we get the
 id of the caller (the gui element which caused the event) and get
 the pointer to the gui environment.
 */
+/*
+	Android is using multitouch events.
+	We allow users to move around the Irrlicht logo as example of how to use those.
+*/
+/*
+	Android is using multitouch events.
+	We allow users to move around the Irrlicht logo as example of how to use those.
+*/
 class MyEventReceiver : public IEventReceiver
 {
 public:
-	MyEventReceiver(SAppContext & context) : Context(context) { }
+	MyEventReceiver(android_app* app )
+	: Device(0), AndroidApp(app), SpriteToMove(0), TouchID(-1), Guienv(0), Counter(0),Listbox(0)
+	{
+	}
+
+	void Init(IrrlichtDevice *device, IGUIEnvironment* guienv, 	s32	counter, IGUIListBox* listbox)
+	{
+		Device = device;
+        Guienv = guienv;
+        Counter = counter;
+        Listbox = listbox;
+	}
 
 	virtual bool OnEvent(const SEvent& event)
 	{
-		LOGW("marky  file =%s, func=%s, line=%d , event.EventType=%d ", __FILE__, __FUNCTION__, __LINE__, event.EventType);
-    //if (event.EventType == EET_GUI_EVENT)
+	//LOGW("marky OnEvent file =%s, func=%s, line=%d  event.EventType=%d", __FILE__, __FUNCTION__, __LINE__, event.EventType);
+    
     if (event.EventType == EET_TOUCH_INPUT_EVENT)
 		{
-			s32 id = event.GUIEvent.Caller->getID();
-			IGUIEnvironment* env = Context.device->getGUIEnvironment();
+			/*
+				For now we fake mouse-events. Touch-events will be handled inside Irrlicht in the future, but until
+				that is implemented you can use this workaround to get a GUI which works at least for simple elements like
+				buttons. That workaround does ignore multi-touch events - if you need several buttons pressed at the same
+				time you have to handle that yourself.
+			*/
+			SEvent fakeMouseEvent;
+			fakeMouseEvent.EventType = EET_MOUSE_INPUT_EVENT;
+			fakeMouseEvent.MouseInput.X = event.TouchInput.X;
+			fakeMouseEvent.MouseInput.Y = event.TouchInput.Y;
+			fakeMouseEvent.MouseInput.Shift = false;
+			fakeMouseEvent.MouseInput.Control = false;
+			fakeMouseEvent.MouseInput.ButtonStates = 0;
+			fakeMouseEvent.MouseInput.Event = EMIE_COUNT;
+      //LOGW("marky EET_TOUCH_INPUT_EVENT file =%s, func=%s, line=%d  event.TouchInput.Event=%d", __FILE__, __FUNCTION__, __LINE__, event.TouchInput.Event);
+			
+      
+      
+      switch (event.TouchInput.Event)
+			{               
+        case ETIE_PRESSED_DOWN:
+				{
+					// We only work with the first for now.force opengl error
+					// s32 id = event.GUIEvent.Caller->getID();  //--> same as event.TouchInput.ID
+                    //LOGW("marky EET_TOUCH_INPUT_EVENT file =%s, func=%s, line=%d event.TouchInput.ID=%d, ETIE_PRESSED_DOWN", __FILE__, __FUNCTION__, __LINE__, event.TouchInput.ID);
+                    if ( TouchID == -1 )
+					{
+						fakeMouseEvent.MouseInput.Event = EMIE_LMOUSE_PRESSED_DOWN;
 
+						if (Device)
+						{
+							position2d<s32> touchPoint(event.TouchInput.X, event.TouchInput.Y);
+							IGUIElement * logo = Device->getGUIEnvironment()->getRootGUIElement()->getElementFromId ( GUI_IRR_LOGO );
+							if ( logo && logo->isPointInside (touchPoint) )
+							{
+								TouchID = event.TouchInput.ID;
+								SpriteToMove = logo;
+								SpriteStartRect =  SpriteToMove->getRelativePosition();
+								TouchStartPos = touchPoint;
+							}
+						}
+					}
+					break;
+				}
+				case ETIE_MOVED:
+					if ( TouchID == event.TouchInput.ID )
+					{
+						fakeMouseEvent.MouseInput.Event = EMIE_MOUSE_MOVED;
+						fakeMouseEvent.MouseInput.ButtonStates = EMBSM_LEFT;
+
+						if ( SpriteToMove && TouchID == event.TouchInput.ID )
+						{
+
+							position2d<s32> touchPoint(event.TouchInput.X, event.TouchInput.Y);
+							MoveSprite(touchPoint);
+						}
+					}
+					break;
+				case ETIE_LEFT_UP:
+					if ( TouchID == event.TouchInput.ID )
+					{
+						fakeMouseEvent.MouseInput.Event = EMIE_LMOUSE_LEFT_UP;
+
+						if ( SpriteToMove )
+						{
+							TouchID = -1;
+							position2d<s32> touchPoint(event.TouchInput.X, event.TouchInput.Y);
+							MoveSprite(touchPoint);
+							SpriteToMove = 0;
+						}
+					}
+					break;
+				default:
+					break;
+			}
+
+			if ( fakeMouseEvent.MouseInput.Event != EMIE_COUNT && Device )
+			{
+				Device->postEventFromUser(fakeMouseEvent);
+			}
+		}
+		else if ( event.EventType == EET_GUI_EVENT )
+		{
+			s32 CallerId = event.GUIEvent.Caller->getID();
+			//LOGW("marky EET_TOUCH_INPUT_EVENT file =%s, func=%s, line=%d event.GUIEvent.EventType=%d, id=%d", __FILE__, __FUNCTION__, __LINE__, event.GUIEvent.EventType, id);
+
+			/*
+				Show and hide the soft input keyboard when an edit-box get's the focus.
+			*/
 			switch(event.GUIEvent.EventType)
 			{
+				//LOGW("marky EET_TOUCH_INPUT_EVENT file =%s, func=%s, line=%d event.GUIEvent.EventType=%d", __FILE__, __FUNCTION__, __LINE__, event.GUIEvent.EventType);
+                case EGET_SCROLL_BAR_CHANGED:
+                {
+                    LOGW("marky EET_TOUCH_INPUT_EVENT file =%s, func=%s, line=%d EGET_SCROLL_BAR_CHANGED", __FILE__, __FUNCTION__, __LINE__);
 
-			/*
-			If a scrollbar changed its scroll position, and it is
-			'our' scrollbar (the one with id GUI_ID_TRANSPARENCY_SCROLL_BAR), 
-			then we change the transparency of all gui elements. This is an
-			easy task: There is a skin object, in which all color
-			settings are stored. We simply go through all colors
-			stored in the skin and change their alpha value.
-			*/
-			case EGET_SCROLL_BAR_CHANGED:
-        LOGW("marky  file =%s, func=%s, line=%d , EGET_SCROLL_BAR_CHANGED ", __FILE__, __FUNCTION__, __LINE__);
-				if (id == GUI_ID_TRANSPARENCY_SCROLL_BAR)
-				{
-					s32 pos = ((IGUIScrollBar*)event.GUIEvent.Caller)->getPos();
-					setSkinTransparency(pos, env->getSkin());
-				}
-				break;
+                }
+                break;
+                case EGET_BUTTON_CLICKED:
+                {
+                    //LOGW("marky EET_TOUCH_INPUT_EVENT file =%s, func=%s, line=%d EGET_BUTTON_CLICKED", __FILE__, __FUNCTION__, __LINE__);
 
-			/*
-			If a button was clicked, it could be one of 'our'
-			three buttons. If it is the first, we shut down the engine.
-			If it is the second, we create a little window with some
-			text on it. We also add a string to the list box to log
-			what happened. And if it is the third button, we create
-			a file open dialog, and add also this as string to the list box.
-			That's all for the event receiver.
-			*/
-			case EGET_BUTTON_CLICKED:
-        LOGW("marky  file =%s, func=%s, line=%d , EGET_BUTTON_CLICKED ", __FILE__, __FUNCTION__, __LINE__);
-				switch(id)
-				{
-				case GUI_ID_QUIT_BUTTON:
-          LOGW("marky  file =%s, func=%s, line=%d , GUI_ID_QUIT_BUTTON ", __FILE__, __FUNCTION__, __LINE__);
-					Context.device->closeDevice();
-					return true;
+                }
+                break;
+                case EGET_FILE_SELECTED:
+                {
+                    //LOGW("marky EET_TOUCH_INPUT_EVENT file =%s, func=%s, line=%d EGET_FILE_SELECTED", __FILE__, __FUNCTION__, __LINE__);
 
-				case GUI_ID_NEW_WINDOW_BUTTON:
-          LOGW("marky  file =%s, func=%s, line=%d , GUI_ID_NEW_WINDOW_BUTTON ", __FILE__, __FUNCTION__, __LINE__);
+                }
+                break;
+                case EGET_EDITBOX_ENTER:
+                    //LOGW("marky EET_TOUCH_INPUT_EVENT file =%s, func=%s, line=%d EGET_EDITBOX_ENTER", __FILE__, __FUNCTION__, __LINE__);
+					if ( event.GUIEvent.Caller->getType() == EGUIET_EDIT_BOX )
 					{
-					Context.listbox->addItem(L"Window created");
-					Context.counter += 30;
-					if (Context.counter > 200)
-						Context.counter = 0;
+						if( Device->getGUIEnvironment() )
+							Device->getGUIEnvironment()->setFocus(NULL);
+						android::setSoftInputVisibility(AndroidApp, false);
+					}
+				    break;
+                case EGET_ELEMENT_FOCUS_LOST:
+                    //LOGW("marky EGET_ELEMENT_FOCUS_LOST file =%s, func=%s, line=%d event.GUIEvent.EventType=%d, id=%d", __FILE__, __FUNCTION__, __LINE__, event.GUIEvent.EventType, id);
+					if ( event.GUIEvent.Caller->getType() == EGUIET_EDIT_BOX )
+					{
+					    LOGW("marky EGUIET_EDIT_BOX file =%s, func=%s, line=%d EGUIET_EDIT_BOX=%d", __FILE__, __FUNCTION__, __LINE__, EGUIET_EDIT_BOX);
+						/* 	Unfortunatly this only works on some android devices.
+							On other devices Android passes through touch-input events when the virtual keyboard is clicked while blocking those events in areas where the keyboard isn't.
+							Very likely an Android bug as it only happens in certain cases (like Android Lollipop with landscape mode on MotoG, but also some reports from other devices).
+							Or maybe Irrlicht still does something wrong.
+							Can't figure it out so far - so be warned - with landscape mode you might be better off writing your own keyboard.
+						*/
+						android::setSoftInputVisibility(AndroidApp, false);
+					}
+                    break;
+                case EGET_ELEMENT_FOCUSED:
+                    //LOGW("marky EGET_ELEMENT_FOCUSED file =%s, func=%s, line=%d event.GUIEvent.EventType=%d, CallerId=%d", __FILE__, __FUNCTION__, __LINE__, event.GUIEvent.EventType, CallerId);
+					/* Add by marky */
+					if (GUI_ID_QUIT_BUTTON == CallerId) {
+                         LOGW("marky EGET_ELEMENT_FOCUSED file =%s, func=%s, line=%d event.GUIEvent.EventType=%d, GUI_ID_QUIT_BUTTON", __FILE__, __FUNCTION__, __LINE__, event.GUIEvent.EventType);
+                         Device->closeDevice();
+                         return true;
+					}
+					else if (GUI_ID_NEW_WINDOW_BUTTON == CallerId) {
+					     LOGW("marky EGET_ELEMENT_FOCUSED file =%s, func=%s, line=%d event.GUIEvent.EventType=%d, GUI_ID_NEW_WINDOW_BUTTON", __FILE__, __FUNCTION__, __LINE__, event.GUIEvent.EventType);
 
-					IGUIWindow* window = env->addWindow(
-						rect<s32>(100 + Context.counter, 100 + Context.counter, 300 + Context.counter, 200 + Context.counter),
-						false, // modal?
-						L"Test window");
+					     Listbox->addItem(L"Window created");
+					     Counter += 30;
+					     if (Counter > 200)
+						     Counter = 0;
 
-					env->addStaticText(L"Please close me",
+					     IGUIWindow* window = Guienv->addWindow(
+						 rect<s32>(100 + Counter, 100 +Counter, 300 + Counter, 200 + Counter),
+						 false, // modal?
+						 L"Test window");
+
+					    Guienv->addStaticText(L"Please close me",
 						rect<s32>(35,35,140,50),
 						true, // border?
 						false, // wordwrap?
 						window);
+						return true;
+
 					}
-					return true;
+					else if (GUI_ID_FILE_OPEN_BUTTON == CallerId) {
+                        LOGW("marky EGET_ELEMENT_FOCUSED file =%s, func=%s, line=%d event.GUIEvent.EventType=%d, GUI_ID_FILE_OPEN_BUTTON", __FILE__, __FUNCTION__, __LINE__, event.GUIEvent.EventType);
 
+					    Listbox->addItem(L"File open");
+					    // There are some options for the file open dialog
+					    // We set the title, make it a modal window, and make sure
+					    // that the working directory is restored after the dialog
+					    // is finished.
+					    Guienv->addFileOpenDialog(L"Please choose a file.", true, 0, -1, true);
+					    return true;
+					}
+					else if (GUI_ID_TRANSPARENCY_SCROLL_BAR == CallerId) {
+                         LOGW("marky EGET_ELEMENT_FOCUSED file =%s, func=%s, line=%d event.GUIEvent.EventType=%d, GUI_ID_TRANSPARENCY_SCROLL_BAR", __FILE__, __FUNCTION__, __LINE__, event.GUIEvent.EventType);
+					     s32 pos = ((IGUIScrollBar*)event.GUIEvent.Caller)->getPos();
+					     setSkinTransparency(pos, Guienv->getSkin());
+					}
 
-				case GUI_ID_FILE_OPEN_BUTTON:
-          LOGW("marky  file =%s, func=%s, line=%d , GUI_ID_FILE_OPEN_BUTTON ", __FILE__, __FUNCTION__, __LINE__);
-					Context.listbox->addItem(L"File open");
-					// There are some options for the file open dialog
-					// We set the title, make it a modal window, and make sure
-					// that the working directory is restored after the dialog
-					// is finished.
-					env->addFileOpenDialog(L"Please choose a file.", true, 0, -1, true);
-					return true;
-
+					/* End by marky */
+					if ( event.GUIEvent.Caller->getType() == EGUIET_EDIT_BOX )
+					{
+						android::setSoftInputVisibility(AndroidApp, true);
+					}
+                    break;
 				default:
-					return false;
-				}
-				break;
-
-			case EGET_FILE_SELECTED:
-				LOGW("marky  file =%s, func=%s, line=%d , EGET_FILE_SELECTED ", __FILE__, __FUNCTION__, __LINE__);
-        {
-					// show the model filename, selected in the file dialog
-					IGUIFileOpenDialog* dialog =
-						(IGUIFileOpenDialog*)event.GUIEvent.Caller;
-					Context.listbox->addItem(dialog->getFileName());
-				}
-				break;
-
-			default:
-				break;
+					break;
 			}
 		}
 
 		return false;
 	}
 
+	void MoveSprite(const irr::core::position2d<irr::s32> &touchPos)
+	{
+		irr::core::position2d<irr::s32> move(touchPos-TouchStartPos);
+		SpriteToMove->setRelativePosition(SpriteStartRect.UpperLeftCorner + move);
+	}
+
 private:
-	SAppContext & Context;
+	IrrlichtDevice * Device;
+	android_app* AndroidApp;
+	gui::IGUIElement * SpriteToMove;
+	core::rect<s32> SpriteStartRect;
+	core::position2d<irr::s32> TouchStartPos;
+	s32 TouchID;
+    IGUIEnvironment* Guienv;
+	s32				Counter;
+	IGUIListBox*	Listbox;
 };
 
 /* Mainloop.
@@ -238,7 +369,7 @@ void android_main(android_app* app)
   
   
  
-	//MyEventReceiver receiver(app);
+	MyEventReceiver receiver(app);
 	// Then create the event receiver, giving it that context structure.
 	LOGW("marky android_main file =%s, func=%s, line=%d  ", __FILE__, __FUNCTION__, __LINE__);
 
@@ -262,7 +393,7 @@ void android_main(android_app* app)
 	param.Bits = 24;
 	param.ZBufferBits = 16;
 	param.AntiAlias  = 0;
-	//param.EventReceiver = &receiver;
+	param.EventReceiver = &receiver;
 
 	/* Logging is written to a file. So your application should disable all logging when you distribute your
        application or it can fill up that file over time.
@@ -275,7 +406,7 @@ void android_main(android_app* app)
 	LOGW("marky android_main file =%s, func=%s, line=%d  ", __FILE__, __FUNCTION__, __LINE__);
 	if (device == 0)
        	return;
-    LOGW("marky android_main file =%s, func=%s, line=%d  ", __FILE__, __FUNCTION__, __LINE__);
+  LOGW("marky android_main file =%s, func=%s, line=%d  ", __FILE__, __FUNCTION__, __LINE__);
 	//receiver.Init(device);
 	LOGW("marky android_main file =%s, func=%s, line=%d  ", __FILE__, __FUNCTION__, __LINE__);
 	// And tell the device to use our custom event receiver.
@@ -293,6 +424,8 @@ void android_main(android_app* app)
 	ILogger* logger = device->getLogger();
 	IFileSystem * fs = device->getFileSystem();
 	LOGW("marky android_main file =%s, func=%s, line=%d  ", __FILE__, __FUNCTION__, __LINE__);
+
+    //receiver.Init(device,guienv);
 
 	/* Access to the Android native window. You often need this when accessing NDK functions like we are doing here.
 	   Note that windowWidth/windowHeight have already subtracted things like the taskbar which your device might have,
@@ -376,9 +509,9 @@ void android_main(android_app* app)
 
 	guienv->addButton(rect<s32>(10,240,110,240 + 32), 0, GUI_ID_QUIT_BUTTON,
 			L"Quit", L"Exits Program");
-	guienv->addButton(rect<s32>(10,280,110,280 + 32), 0, GUI_ID_NEW_WINDOW_BUTTON,
+	guienv->addButton(rect<s32>(10,290,110,290 + 32), 0, GUI_ID_NEW_WINDOW_BUTTON,
 			L"New Window", L"Launches a new Window");
-	guienv->addButton(rect<s32>(10,320,110,320 + 32), 0, GUI_ID_FILE_OPEN_BUTTON,
+	guienv->addButton(rect<s32>(10,340,110,340 + 32), 0, GUI_ID_FILE_OPEN_BUTTON,
 			L"File Open", L"Opens a file");
 
 	/*
@@ -389,9 +522,9 @@ void android_main(android_app* app)
 	Then we create an other static text and a list box.
 	*/
 
-	guienv->addStaticText(L"Transparent Control:", rect<s32>(150,20,350,40), true);
+	guienv->addStaticText(L"Transparent Control:", rect<s32>(300,120,500,140), true);
 	IGUIScrollBar* scrollbar = guienv->addScrollBar(true,
-			rect<s32>(150, 45, 350, 60), 0, GUI_ID_TRANSPARENCY_SCROLL_BAR);
+			rect<s32>(300, 145, 500, 170), 0, GUI_ID_TRANSPARENCY_SCROLL_BAR);
 	scrollbar->setMax(255);
 	scrollbar->setPos(255);
 	setSkinTransparency( scrollbar->getPos(), guienv->getSkin());
@@ -401,30 +534,20 @@ void android_main(android_app* app)
 
 	guienv->addStaticText(L"Logging ListBox:", rect<s32>(50,110,250,130), true);
 	IGUIListBox * listbox = guienv->addListBox(rect<s32>(50, 140, 250, 210));
-	guienv->addEditBox(L"Editable Text", rect<s32>(350, 80, 550, 100));
+	guienv->addEditBox(L"Editable Text", rect<s32>(350, 280, 550, 330));
+
+	receiver.Init(device,guienv, 0, listbox);
 
 	// A field to show some text. Comment out stat->setText in run() if you want to see the dpi instead of the fps.
-  guienv->getFont(mediaPath +"fonthaettenschweiler.bmp");  //add by marky
+    guienv->getFont(mediaPath +"fonthaettenschweiler.bmp");  //add by marky
 	IGUIStaticText *text = guienv->addStaticText(stringw(displayMetrics.xdpi).c_str(),
 		rect<s32>(5,5,635,35), false, false, 0, GUI_INFO_FPS );
 
-	// Store the appropriate data in a context structure.
-	SAppContext context;
-	context.device = device;
-	context.counter = 0;
-	context.listbox = listbox;
-
-	// Then create the event receiver, giving it that context structure.
-	MyEventReceiver receiver(context);
-
-	// And tell the device to use our custom event receiver.
-	device->setEventReceiver(&receiver);
-  
 	/*
 	And at last, we create a nice Irrlicht Engine logo in the top left corner.
 	*/
 	guienv->addImage(driver->getTexture(mediaPath + "irrlichtlogo2.png"),
-			position2d<int>(10,10));  
+			position2d<int>(10,10));  //, true, 0, GUI_IRR_LOGO);//);  
 
 
 	/*
